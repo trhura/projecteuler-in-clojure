@@ -1,18 +1,20 @@
-;; We shall say that an n-digit number is pandigital if it makes use of
-;; all the digits 1 to n exactly once. For example, 2143 is a 4-digit
-;; pandigital and is also prime.
+;; The number, 1406357289, is a 0 to 9 pandigital number because it is
+;; made up of each of the digits 0 to 9 in some order, but it also has
+;; a rather interesting sub-string divisibility property.
 
-;; What is the largest n-digit pandigital prime that exists?
+;; Let d1 be the 1st digit, d2 be the 2nd digit, and so on. In this
+;; way, we note the following:
 
-(defn is-prime? [num]
-  ;; primality test by trail-division
-  (cond (< num 2) false
-        (= num 2) true
-        (even? num) false
-        :else (loop [n 3]
-                (cond (> (* n n) num) true
-                      (zero? (rem num n)) false
-                      :else (recur (+ 2 n))))))
+;;     d2d3d4=406 is divisible by 2
+;;     d3d4d5=063 is divisible by 3
+;;     d4d5d6=635 is divisible by 5
+;;     d5d6d7=357 is divisible by 7
+;;     d6d7d8=572 is divisible by 11
+;;     d7d8d9=728 is divisible by 13
+;;     d8d9d10=289 is divisible by 17
+
+;; Find the sum of all 0 to 9 pandigital numbers with this property.
+
 
 (defn lexicographic-permutation [coll]
   ;; reverse lexicographic order
@@ -30,7 +32,7 @@
                 ;; rightmost index k such that a[k] < a[k + 1]
                 (loop [curidx (lastidx v)]
                   (if (<= curidx 0) -1
-                      (if (< (get v curidx) (get v (dec curidx)))
+                      (if (> (get v curidx) (get v (dec curidx)))
                         (dec curidx)
                         (recur (dec curidx))))))
 
@@ -38,7 +40,7 @@
                 (assert (vector? v))
                 (loop [curidx (lastidx v)]
                   (assert (> curidx 0))
-                  (if (< (get v curidx) (get v k))
+                  (if (> (get v curidx) (get v k))
                     curidx
                     (recur (dec curidx)))))
 
@@ -58,20 +60,26 @@
                              nil
                              (cons curperm (lazy-seq (lazy-permutations (next-permutation curperm))))))]
 
-    (all-permutations (vec (reverse (sort coll))))))
-
-(defn pandigitals []
-  ;; pandigital numbers from 987654321 to [1]
-  (apply concat (for [i (range 9 0 -1)]
-                  (lexicographic-permutation (range i 0 -1)))))
+    (all-permutations (vec (sort coll)))))
 
 (defn to-number [digit-vector]
   ;; convert a digit vector to an actual number
-  (apply + (map (fn [[p d]] (int (* d (Math/pow 10 p))))
+  (apply + (map (fn [[p d]] (bigint (*' d (Math/pow 10 p))))
                 (map-indexed vector (reverse digit-vector)))))
 
-(defn prob41 []
-  (loop [p (pandigitals)]
-    (if (is-prime? (to-number (first p)))
-      (to-number (first p))
-      (recur (next p)))))
+(defn pandigitals []
+  (lexicographic-permutation (range 0 10)))
+
+(defn substring-divisible? [digitvec]
+  (and (zero? (rem (to-number (subvec digitvec 1 4)) 2))
+       (zero? (rem (to-number (subvec digitvec 2 5)) 3))
+       (zero? (rem (to-number (subvec digitvec 3 6)) 5))
+       (zero? (rem (to-number (subvec digitvec 4 7)) 7))
+       (zero? (rem (to-number (subvec digitvec 5 8)) 11))
+       (zero? (rem (to-number (subvec digitvec 6 9)) 13))
+       (zero? (rem (to-number (subvec digitvec 7 10)) 17))))
+
+(defn prob44 []
+  (apply + (->> (pandigitals)
+                (filter substring-divisible?)
+                (map to-number))))
