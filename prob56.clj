@@ -11,7 +11,7 @@
   (vec (map #(- (int %) 48) (str (bigint number)))))
 
 (defn expt [x n]
-  ;; expt implementation which only care about the last ten digit
+  ;; expt implementation
   (let [multiply (fn [a b] (*' a b))
         square (fn [n] (multiply n n))]
 
