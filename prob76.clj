@@ -13,17 +13,35 @@
 
 (def number-of-partitions
   ;; http://en.wikipedia.org/wiki/Partition_%28number_theory%29#Recurrence_formula
-  ;; http://en.wikipedia.org/wiki/Pentagonal_number_theorem#Relation_with_partitions
-  (memoize
-   (fn [n]
-     (cond
-      (< n 0)    0
-      (= n 0)    1
-      :else      (apply + (for [k (interleave (range 1 1000) (range -1 -1000 -1))
-                                :let [pk (pentagonal-number k)]
-                                :while (>= (- n pk) 0)]
-                            (* (int (Math/pow (- 1) (dec k)))
-                               (number-of-partitions (- n pk)))))))))
+  (fn [n] (cond
+           (< n 0) 0
+           (= n 0) 1
+           :else   (apply + (for [k (interleave (range 1 1000)
+                                                (range -1 -1000 -1))
+                                  :let [gk (* 1/2 k (- (* 3 k) 1))]
+                                  :while (>= (- n gk) 0)]
+                              (* (int (Math/pow (- 1) (dec k)))
+                                 (number-of-partitions (- n gk))))))))
+;; user> (time (number-of-partitions 30))
+;; "Elapsed time: 134978.672483 msecs"
+;; 5604
 
-(defn prob76 []
-  (dec (number-of-partitions 100)))
+(def memoized-number-of-partitions
+  (memoize
+   (fn [n] (cond
+           (< n 0) 0
+           (= n 0) 1
+           :else   (apply + (for [k (interleave (range 1 1000)
+                                                (range -1 -1000 -1))
+                                  :let [gk (* 1/2 k (- (* 3 k) 1))]
+                                  :while (>= (- n gk) 0)]
+                              (* (int (Math/pow (- 1) (dec k)))
+                                 (memoized-number-of-partitions (- n gk)))))))))
+
+
+;; user> (time (memoized-number-of-partitions 30))
+;; "Elapsed time: 2.075863 msecs"
+;; 5604
+
+(defn prob75 []
+  (dec (memoized-number-of-partitions 100)))
